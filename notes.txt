@@ -1,0 +1,12 @@
+
+
+chapter 5. guess-gui-with-count:
+ render and render-last-scene. very similar. extract similarity? (render-s-in-frame s)?
+
+
+######## Holding at ########
+Chapter 5, Chapter Challenges: Difficult. UFO with direction and smoke trail --
+ add smoke trail
+
+
+########  Skipped ########

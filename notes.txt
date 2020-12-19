@@ -1,12 +1,332 @@
 
+Best way to read the book?
+They just go over source code and have challenges at end of chapter
 
-chapter 5. guess-gui-with-count:
+odd that they do not explain testing
+
+
+
+Chapter 5:
+#
+guess-gui-with-count:
  render and render-last-scene. very similar. extract similarity? (render-s-in-frame s)?
 
 
+Chapter 6:
+
+#
+snake game from chapter:
+
+1.
+What is the puropse of SEG-SIZE? 
+We use this as a multiple to create the board --
+    (define WIDTH-PX  (* SEG-SIZE SIZE))
+    (define HEIGHT-PX (* SEG-SIZE SIZE))
+And also to render objects on the board with img+scene --
+    (define (img+scene posn img scene)
+  (place-image img 
+               (* (posn-x posn) SEG-SIZE)
+               (* (posn-y posn) SEG-SIZE)
+               scene))
+
+but why is this introduced? what would happen if we didn't have this? why not just place the image at the position?
+
+I think this is dividing the boards into segments and the posn is logical -- It is the segment number(s) and not physcial -- the actual pixel position
+
+Just like in HTDP physical vs logical
+
+did not understand that well there either
+
+2.
+age-goo --
+they renew which replaces expired goo and then age. This means that we never have goo with EXPIRATION-TIME.
+I would think to age and then renew?
+
+
+#
+Chapter Challenges: easy Alter the game so that it has a randomly varying number of goos --
+is this a random number of goos just on game start and we continue with the same amount througout the game or
+the number changes randomly (how? when?) during the game? 
+
+went with random at start
+
+
+#
+Chapter Challenges: medium Add another type of goo that makes the snake grow two segments longer instead of one segment longer.
+
+1.
+should we contiue with 1 goo struct and add a field that specifies the amoutn of growth vs adding a new struct? -- it seems that using diffiert struct type is problematic because we need to call the appropriate struct type for the slector -- (goo-loc) and (goo2-loc)
+
+ended up doing with extra type field
+
+2.
+The mechanism to create the goo type with the list of types and creation in fresh-goo. Is this good? can we do better? How would I test fresh-goo since we would want t ocheck for random amount of types of goo
+
+
+3.
+grow-goo2 - putting grow funtion into grow-one-segment and thge calling it twice. is this clean? 
+
+
+#
+Chapter 6 Challenges: Add obstacles to the game --
+
+1.
+you implemented touching like eating where the head has to be exaclty in the same segment as the obstacle but this does not look nice. snake-touches-obstacles? should be implelemteed differerly?
+
+2. 
+You make OBSTACLE-IMG same size as everyting else (30). Does it have to be? what happens if it isn't?
+
+
+#
+Chapter 6 Challenges: Moving obstacles --
+
+1.
+"make them move around at certain intervals" -- More than 1 interval?? What does that mean??
+I did one interval
+
+2.
+I intoduced ObstacleState which holds the timer and list of Obstacles so that we can handle both together in handle-obstacles. 
+Mybe another option is to have a seperate timer for each obstacle similar to goo but this is not needed since they all expire together
+
+3. 
+gen-random-obstacles now produces ObstacleState instead of just a list of Obstacles
+
+4. 
+I "move" the obstacles by generating a new set once the timer has expired. Maybe they had something else in mind
+
+5.
+I inlined access to the obstacle list in render-pit and dead and kept the signatures of snake-touches-obstacles? and obstacle-list+scene the same as before expectign a (List-of Obstacle).
+It did not feel necesary to instruce an Obstacle state wrapper for these functions
+
+
+
+#
+Chapter 6 Challenges: Second snake --
+
+1.
+added second snake instance and Not list of snakes since we won't add more snakes
+
+2.
+handeling direction change with direct-snakes --
+You introduced DirectionKeyEvent and WsadKeyEvent. I think the flow here with the signatures is ok but now sure
+
+3. 
+Huge mess becaase you are not testing anything and there are no signatures\not really following recipes. start from their code as a base and add on to it from now on please. Work systematically please following the recipes. Signature/purpose/stub, tests and implementation! 
+
+4.
+would like to test direction change of skanes somehow ideally independantly? need to revisit with tests and see. skipping
+
+5.
+You only have a single goos-eaten counter. You should probably have one per snake. skipping 
+
+6. 
+Should the game end if any snake dies? it makes more sense to end when both die so other player can continue??? skipping
+
+
+#
+Chapter 7: Derive this! d/dx --
+
+don't understand sin\cosin stuff --
+
+ > (define newcos (d/dx sin))
+> (newcos 0)
+0.9999999983333334
+> (map newcos (list (/ pi 2) pi))
+'(-49999.4999975 -9.398762286028442e-12)
+
+Second, we can also differentiate the sine function, which is known to produce the cosine function. A quick test proves that applying our d/dx function to the sine function produces a function that acts approximately like cosine.
+
+
+
+#
+Chapter 8: random-quotient
+
+;; Nat Nat -> Nat
+;; a random number between 1 and the (quotient x y)
+(define (random-quotient x y)
+  (define div (quotient x y))
+  (if (> 0 div) 0 (random+ (add1 div))))
+
+;; Nat -> Nat 
+;; (random+ n) creates a random number in [1,n]
+(define (random+ n)
+  (add1 (random n)))
+
+
+1. 
+(if (> 0 div) 
+sholdn't this be (if ( 0 div) > div would never be less than zero
+
+2. calling (random+ (add1 div)) and then add1 again in random+. Couldn't this potentially produce add1(div) if random produced its max? (one more than we want...)
+
+I think they should be calling (random+ div)?
+
+#
+Chapter 8: interval-/interval+
+
+The third param [Nat] -- (max-value 100)
+
+;; Nat Nat [Nat] -> Nat 
+;; subtract n from m but stay in [0,max-value]
+(define (interval+ n m (max-value 100))
+
+It seems that the third param -- max-value is optional and we set its defualt value to 100 if it is not given (only two params are givem) 
+
+
+can call (interval- 150 20) in which case max-value = 100 resulting in 100
+can also call (interval- 150 20 110) in which case max-value = 100 resulting in 110
+(interval- 150 20 30) = 30 etc...
+
+
+# Chapter 8: damage-monster
+
+The flow here of damage genration with random-quotient and damage-monster which uses interval- to limit (monster-health - damage) between [0, 100]. I am not fully understaning the flow but I guess it makes sense:
+
+we generate some randomish damage unrealted to the current health value using random-quotient and some cost,
+we then subract this from current health value but ensure that we stay above 0.
+
+I don't think we need to set the upper limit here since we are subtracting here but probably they provide this so that we can use it for interval+
+
+# Chapter 8: tests --
+
+1.
+What is going on here --   
+(check-equal? (player-health (orc-world-player
+                                (let () 
+                                  (define w (struct-copy orc-world WORLD1))
+                                  (heal w)
+                                  w)))
+                (min MAX-HEALTH
+                     (+ 8 (player-health (orc-world-player WORLD1)))))
+
+let with empty (), struct-copy why do we need all this? can we do something more simple --
+
+directly above they do a seperate test with test-begin
+
+  (test-begin (define o (orc 'image 0 5))
+              (damage-monster o 0)
+              (check-equal? o (orc 'image 0 5)))
+
+why not define w in the let --
+
+(let ((w (struct-copy orc-world WORLD1))) 
+                                  (heal w)
+                                  w)
+
+2.
+trying to add my own test --
+
+(define WORLD3 (struct-copy orc-world (initialize-orc-world) [player (player 35 10 10)]))
+
+  (check-equal? (player-strength (orc-world-player
+                                  (let () 
+                                    (define w (struct-copy orc-world WORLD3))
+                                    (eat w)
+                                    w)))
+                (min MAX-STRENGTH
+                     (+ 6 (player-strength (orc-world-player WORLD3))))) 
+
+it seems that eat somehow updates WORLD3 as well??
+
+name:       check-equal?
+location:   regain.rkt:879:2
+actual:     16
+expected:   22
+--------------------
+
+
+
+
+> (define WORLD0 (orc-world (player 10 10 10) empty 0 0))
+> (define wb (struct-copy orc-world WORLD0))
+> (eq? WORLD0 wb)
+#f
+> (equal? WORLD0 wb)
+#t
+> wb
+(orc-world (player 10 10 10) '() 0 0)
+> (heal wb)
+> wb
+(orc-world (player 18 10 10) '() -1 0)
+> WORLD0
+(orc-world (player 18 10 10) '() 0 0)
+
+the player get updated as well for WORLD0 but not the attack#
+
+What is going on? 
+
+
+#
+Chapter 8 challenges: Equip the player with an armor property. your solution armor. rkt. 
+
+1.
+wrapping player-health+ with damage-player-health in all-monsters-attack-player.
+is this good? 
+
+2.
+damage-player-health -- should it be broken up into more helpers so easier to test? these are a bit confusing but maybe aren't substantial enough for thier own function
+
+  (define damage-to-be-absorbed (min armor-absorbing-capacity (- delta)))
+  (define remaining-damage (min (+ delta damage-to-be-absorbed) 0))
+
+3. 
+I added some tests and modfied one that broke but probably can do better?
+
+# 
+Chapter 8 challenges: Create a monster that ignores the player’s armor - ignore-armor.rkt
+
+my change was very small. just in one-monster-attacks-player dragon? monster calls player-health+ directly.
+
+I added only one test with just a dragon. probably need more tests?
+
+in general testing\updating tests when modifying here is a mess. so many tests and don;t know where\what to add
+
+
+
+#
+Chapter 9: Back to FOR/FOLDL
+
+"On closer observation, for/fold is a bit like both define-values and values. It sets up two sets of bindings. The first one determines how many values each loop iteration with the loop body must return and how many values the loop itself returns." -
+
+ I do not undersdand what they are saying here.
+
+ As far as I understand, we define the accumulators and need to return the same amount of values as there are accumulators for each iteration. these accumulators can be accesed whithin the body loop
+
+
+#
+Chapter 9: Back to FOR/FOLDL
+
+Do not understand the following --
+
+"The sublists in a for* are evaluated just as they would be in a nested for loop— every time a level runs, the corresponding list is evaluated.
+
+That allows us to compute values like this:
+> (for*/list ([k '((1 2) (3 4) (5 6) (7 8))]
+              [n k])
+    n)
+'(1 2 3 4 5 6 7 8)
+Here, we flatten a list of lists—turn it into a single list of numbers—by binding each element in the superlist to k, binding each element of those lists to n, and returning those values. We can do this because every time we change elements in the list bound to k, the initial value for n is recomputed."
+
+
+I can understand what is happening. basically the inner for returns the same value as given by the outer one and we end up with k which then get flattened out 
+
+(for/list ([k '((1 2) (3 4) (5 6) (7 8))])
+              (for/list ([n k])
+                n))
+==
+'((1 2) (3 4) (5 6) (7 8))
+
+but don't really understand their explation\wording
+
+
 ######## Holding at ########
-Chapter 5, Chapter Challenges: Difficult. UFO with direction and smoke trail --
- add smoke trail
+Chapter 9
 
 
-########  Skipped ########
+########  Todo ########
+
+* revisit chapter 6 challenges starting from the book's code as a base
+* Chapter 6 Challenges: Second snake -- address issues #4, #5 and #6
+* Chapter 7: Derive this! d/dx -- understand sin\cosin stuff
+* Chapter 8: move-target. Understand how it works going backwards (up or left at begining) -- Modulo with negative val -- why (modulo -4 12) == 8??
+
